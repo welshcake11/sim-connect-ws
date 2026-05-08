@@ -1,0 +1,24 @@
+{
+  "name": "sim-connect-ws",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/welshcake11/sim-connect-ws.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/welshcake11/sim-connect-ws/issues"
+  },
+  "homepage": "https://github.com/welshcake11/sim-connect-ws#readme",
+  "dependencies": {
+    "node-simconnect": "^4.2.0",
+    "socket.io": "^4.8.3"
+  }
+}
