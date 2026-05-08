@@ -12,9 +12,13 @@
         const socket = io('http://127.0.0.1:3000');
         const messagesDiv = document.getElementById('messages');
 
-        socket.on('message', (data) => {
+        socket.on('altitude', (data) => {
             const messageElement = document.createElement('p');
-            messageElement.textContent = `Received: ${data}`;
+            if (data.altitude === null) {
+                messageElement.textContent = `Waiting for SimConnect data: ${data.message}`;
+            } else {
+                messageElement.textContent = `Received altitude: ${data.altitude} feet | ${data.timestamp}`;
+            }
             messagesDiv.appendChild(messageElement);
         });
 

@@ -1,5 +1,6 @@
 const http = require('http');
 const socketIo = require('socket.io');
+const { open, Protocol, SimConnectConstants, SimConnectDataType, SimConnectPeriod } = require('node-simconnect');
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -15,8 +16,8 @@ const server = http.createServer((req, res) => {
 const io = socketIo(server, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST']
-  }
+    methods: ['GET', 'POST'],
+  },
 });
 
 // Handle socket connections
@@ -28,11 +29,69 @@ io.on('connection', (socket) => {
   });
 });
 
-// Send a message every 10 seconds to all connected clients
+let latestAltitude = null;
+const ALTITUDE_DEFINITION_ID = 1;
+const ALTITUDE_REQUEST_ID = 1;
+
+open('SimConnect Altitude Bridge', Protocol.FSX_SP2)
+  .then(({ recvOpen, handle }) => {
+    console.log('Connected to SimConnect:', recvOpen.applicationName);
+
+    handle.on('exception', (error) => {
+      console.error('SimConnect exception:', error);
+    });
+
+    handle.on('quit', () => {
+      console.log('Simulator quit');
+    });
+
+    handle.on('close', () => {
+      console.log('SimConnect connection closed');
+    });
+
+    handle.on('simObjectData', (recvSimObjectData) => {
+      if (recvSimObjectData.requestID !== ALTITUDE_REQUEST_ID) {
+        return;
+      }
+
+      const altitude = recvSimObjectData.data.readFloat64();
+      latestAltitude = altitude;
+      console.log('Altitude updated:', altitude);
+    });
+
+    handle.addToDataDefinition(
+      ALTITUDE_DEFINITION_ID,
+      'Indicated Altitude',
+      'feet',
+      SimConnectDataType.FLOAT64
+    );
+
+    handle.requestDataOnSimObject(
+      ALTITUDE_REQUEST_ID,
+      ALTITUDE_DEFINITION_ID,
+      SimConnectConstants.OBJECT_ID_USER,
+      SimConnectPeriod.SECOND
+    );
+  })
+  .catch((error) => {
+    console.error('Failed to connect to SimConnect:', error);
+  });
+
+// Send altitude every 10 seconds to all connected clients
 setInterval(() => {
-  const message = `Hello from server! Timestamp: ${new Date().toISOString()}`;
-  io.emit('message', message);
-  console.log('Sent message:', message);
+  const payload = latestAltitude === null
+    ? {
+      altitude: null,
+      message: 'Waiting for SimConnect data',
+      timestamp: new Date().toISOString(),
+    }
+    : {
+      altitude: latestAltitude,
+      timestamp: new Date().toISOString(),
+    };
+
+  io.emit('altitude', payload);
+  console.log('Sent altitude:', payload);
 }, 10000);
 
 // Start the server
