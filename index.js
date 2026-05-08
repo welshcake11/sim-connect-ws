@@ -1,6 +1,11 @@
 const http = require('http');
 const socketIo = require('socket.io');
-const { open, Protocol, SimConnectConstants, SimConnectDataType, SimConnectPeriod } = require('node-simconnect');
+
+const useMockSimconnect = process.env.SIMCONNECT_MOCK === '1' || process.env.SIMCONNECT_MOCK === 'true';
+const simconnect = useMockSimconnect
+  ? require('./mock-simconnect-server')
+  : require('node-simconnect');
+const { open, Protocol, SimConnectConstants, SimConnectDataType, SimConnectPeriod } = simconnect;
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -92,7 +97,7 @@ setInterval(() => {
 
   io.emit('altitude', payload);
   console.log('Sent altitude:', payload);
-}, 10000);
+}, 1000);
 
 // Start the server
 server.listen(port, hostname, () => {

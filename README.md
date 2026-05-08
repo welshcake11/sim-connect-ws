@@ -18,7 +18,23 @@ Start the server:
 node index.js
 ```
 
-The server will start on `http://127.0.0.1:3000` and begin sending messages every 10 seconds.
+The server will start on `http://127.0.0.1:3000` and begin sending altitude updates every 10 seconds.
+
+## Testing with the Mock SimConnect Server
+
+To run the app with a mock SimConnect server instead of a real simulator, set the `SIMCONNECT_MOCK` environment variable:
+
+- PowerShell:
+  ```powershell
+  $env:SIMCONNECT_MOCK = '1'
+  node index.js
+  ```
+- Bash:
+  ```bash
+  SIMCONNECT_MOCK=1 node index.js
+  ```
+
+This starts the same Socket.IO server and sends synthetic altitude values every second to the app, which then forwards them every 10 seconds to connected clients.
 
 ## Connecting a Client
 
