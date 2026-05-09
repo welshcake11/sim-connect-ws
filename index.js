@@ -1,5 +1,5 @@
 const http = require('http');
-const socketIo = require('socket.io');
+const WebSocket = require('ws');
 
 const useMockSimconnect = process.env.SIMCONNECT_MOCK === '1' || process.env.SIMCONNECT_MOCK === 'true';
 const simconnect = useMockSimconnect
@@ -7,7 +7,7 @@ const simconnect = useMockSimconnect
   : require('node-simconnect');
 const { open, Protocol, SimConnectConstants, SimConnectDataType, SimConnectPeriod } = simconnect;
 
-const hostname = '127.0.0.1';
+const hostname = '192.168.68.123';  // find out your local IP address and set it here - ipconfig on Windows, ifconfig on Mac/Linux
 const port = 3000;
 
 // Create HTTP server
@@ -17,22 +17,26 @@ const server = http.createServer((req, res) => {
   res.end('WebSocket server is running\n');
 });
 
-// Create Socket.IO server with CORS enabled
-const io = socketIo(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-});
+// Create ws WebSocket server
+const wss = new WebSocket.Server({ server });
 
-// Handle socket connections
-io.on('connection', (socket) => {
+// Handle WebSocket connections
+wss.on('connection', (socket) => {
   console.log('A client connected');
 
-  socket.on('disconnect', () => {
+  socket.on('close', () => {
     console.log('A client disconnected');
   });
 });
+
+const broadcast = (payload) => {
+  const message = JSON.stringify(payload);
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+};
 
 let latestAltitude = null;
 const ALTITUDE_DEFINITION_ID = 1;
@@ -82,7 +86,7 @@ open('SimConnect Altitude Bridge', Protocol.FSX_SP2)
     console.error('Failed to connect to SimConnect:', error);
   });
 
-// Send altitude every 10 seconds to all connected clients
+// Send altitude every second to all connected clients
 setInterval(() => {
   const payload = latestAltitude === null
     ? {
@@ -95,8 +99,8 @@ setInterval(() => {
       timestamp: new Date().toISOString(),
     };
 
-  io.emit('altitude', payload);
-  console.log('Sent altitude:', payload);
+  broadcast(payload);
+  //console.log('Sent altitude:', payload);
 }, 1000);
 
 // Start the server

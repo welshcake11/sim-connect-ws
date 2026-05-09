@@ -60,7 +60,7 @@ class MockHandle extends EventEmitter {
         requestID: dataRequestId,
         data,
       });
-    }, period === SimConnectPeriod.SECOND ? 1000 : 10000);
+    }, period === SimConnectPeriod.SECOND ? 10000 : 10000);
 
     return Promise.resolve();
   }

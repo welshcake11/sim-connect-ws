@@ -1,38 +1,43 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Socket.IO Client</title>
-    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+    <title>Demo Client</title>
 </head>
+
 <body>
-    <h1>WebSocket Client</h1>
+    <pre>
+      __|__
+*---o--(_)--o---*
+</pre>
+   <h1>WebSocket Client Test</h1>
+    <h3><a href="https://www.diyflightsimpanels.com" target="_blank">www.diyflightsimpanels.com</a></h3>
+    <hr/>
     <div id="messages"></div>
 
     <script>
-        const socket = io('http://127.0.0.1:3000');
+        const socket = new WebSocket('ws://192.168.68.123:3000'); // Update with your server's IP address and port
         const messagesDiv = document.getElementById('messages');
+        const statusElement = document.createElement('h3');
+        messagesDiv.appendChild(statusElement);
 
-        socket.on('altitude', (data) => {
-            const messageElement = document.createElement('p');
-            if (data.altitude === null) {
-                messageElement.textContent = `Waiting for SimConnect data: ${data.message}`;
-            } else {
-                messageElement.textContent = `Received altitude: ${data.altitude} feet | ${data.timestamp}`;
-            }
-            messagesDiv.appendChild(messageElement);
-        });
-
-        socket.on('connect', () => {
-            const statusElement = document.createElement('p');
+        socket.addEventListener('open', () => {
             statusElement.textContent = 'Connected to server';
-            messagesDiv.appendChild(statusElement);
         });
 
-        socket.on('disconnect', () => {
-            const statusElement = document.createElement('p');
+        socket.addEventListener('message', (event) => {
+            const data = JSON.parse(event.data);
+            if (data.altitude === null) {
+                statusElement.textContent = `Waiting for SimConnect data: ${data.message}`;
+            } else {
+                statusElement.textContent = `Received altitude: ${data.altitude} feet | ${data.timestamp}`;
+            }
+        });
+
+        socket.addEventListener('close', () => {
             statusElement.textContent = 'Disconnected from server';
-            messagesDiv.appendChild(statusElement);
         });
     </script>
 </body>
+
 </html>

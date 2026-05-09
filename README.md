@@ -1,6 +1,6 @@
 # Sim Connect WebSocket Server
 
-A simple WebSocket server that sends altitude updates to connected clients every 10 seconds using Socket.IO.
+A simple WebSocket server that sends altitude updates to connected clients every second using the ws library.
 
 ## Installation
 
@@ -34,26 +34,30 @@ To run the app with a mock SimConnect server instead of a real simulator, set th
   SIMCONNECT_MOCK=1 node index.js
   ```
 
-This starts the same Socket.IO server and sends synthetic altitude values every second to the app, which then forwards them every 10 seconds to connected clients.
+This starts the same ws-based WebSocket server and sends synthetic altitude values every second to the app, which then forwards them every second to connected clients.
 
 ## Connecting a Client
 
 ### JavaScript/Node.js Client
 
-Install the Socket.IO client:
+Install the ws client:
 ```bash
-npm install socket.io-client
+npm install ws
 ```
 
 Example client code:
 ```javascript
-const io = require('socket.io-client');
+const WebSocket = require('ws');
 
 // Connect to the server
-const socket = io('http://127.0.0.1:3000');
+const socket = new WebSocket('ws://127.0.0.1:3000');
 
-// Listen for altitude updates
-socket.on('altitude', (data) => {
+socket.on('open', () => {
+  console.log('Connected to server');
+});
+
+socket.on('message', (message) => {
+  const data = JSON.parse(message.toString());
   if (data.altitude === null) {
     console.log('Waiting for SimConnect data:', data.message);
   } else {
@@ -61,13 +65,7 @@ socket.on('altitude', (data) => {
   }
 });
 
-// Handle connection
-socket.on('connect', () => {
-  console.log('Connected to server');
-});
-
-// Handle disconnection
-socket.on('disconnect', () => {
+socket.on('close', () => {
   console.log('Disconnected from server');
 });
 ```
@@ -80,18 +78,24 @@ Create an HTML file with the following content:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Socket.IO Client</title>
-    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+    <title>WebSocket Client</title>
 </head>
 <body>
     <h1>WebSocket Client</h1>
     <div id="messages"></div>
 
     <script>
-        const socket = io('http://127.0.0.1:3000');
+        const socket = new WebSocket('ws://127.0.0.1:3000');
         const messagesDiv = document.getElementById('messages');
 
-        socket.on('altitude', (data) => {
+        socket.addEventListener('open', () => {
+            const statusElement = document.createElement('p');
+            statusElement.textContent = 'Connected to server';
+            messagesDiv.appendChild(statusElement);
+        });
+
+        socket.addEventListener('message', (event) => {
+            const data = JSON.parse(event.data);
             const messageElement = document.createElement('p');
             if (data.altitude === null) {
                 messageElement.textContent = `Waiting for SimConnect data: ${data.message}`;
@@ -101,13 +105,7 @@ Create an HTML file with the following content:
             messagesDiv.appendChild(messageElement);
         });
 
-        socket.on('connect', () => {
-            const statusElement = document.createElement('p');
-            statusElement.textContent = 'Connected to server';
-            messagesDiv.appendChild(statusElement);
-        });
-
-        socket.on('disconnect', () => {
+        socket.addEventListener('close', () => {
             const statusElement = document.createElement('p');
             statusElement.textContent = 'Disconnected from server';
             messagesDiv.appendChild(statusElement);
@@ -121,7 +119,7 @@ Open this HTML file in a web browser to connect and receive messages.
 
 ## Message Format
 
-The server sends messages with the event name `'altitude'` containing an object such as:
+The server sends JSON messages containing an object such as:
 ```
 {
   altitude: 12345.67,
@@ -131,6 +129,6 @@ The server sends messages with the event name `'altitude'` containing an object 
 
 ## Dependencies
 
-- `socket.io`: WebSocket library for real-time communication
+- `ws`: WebSocket library for real-time communication
 - `node-simconnect`: SimConnect client library used to read simulator altitude data</content>
 <parameter name="filePath">c:\Users\phill\repos\sim-connect-ws\README.md
