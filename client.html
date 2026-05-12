@@ -18,7 +18,7 @@
     <script>
         const socket = new WebSocket('ws://192.168.68.123:3000'); // Update with your server's IP address and port
         const messagesDiv = document.getElementById('messages');
-        const statusElement = document.createElement('h3');
+        const statusElement = document.createElement('h2');
         messagesDiv.appendChild(statusElement);
 
         socket.addEventListener('open', () => {
@@ -26,12 +26,8 @@
         });
 
         socket.addEventListener('message', (event) => {
-            const data = JSON.parse(event.data);
-            if (data.altitude === null) {
-                statusElement.textContent = `Waiting for SimConnect data: ${data.message}`;
-            } else {
-                statusElement.textContent = `Received altitude: ${data.altitude} feet | ${data.timestamp}`;
-            }
+            const altitude = event.data;
+            statusElement.textContent = `Received altitude: ${altitude} feet`;
         });
 
         socket.addEventListener('close', () => {

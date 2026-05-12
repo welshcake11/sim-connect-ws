@@ -29,8 +29,7 @@ wss.on('connection', (socket) => {
   });
 });
 
-const broadcast = (payload) => {
-  const message = JSON.stringify(payload);
+const broadcast = (message) => {
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message);
@@ -88,20 +87,10 @@ open('SimConnect Altitude Bridge', Protocol.FSX_SP2)
 
 // Send altitude every second to all connected clients
 setInterval(() => {
-  const payload = latestAltitude === null
-    ? {
-      altitude: null,
-      message: 'Waiting for SimConnect data',
-      timestamp: new Date().toISOString(),
-    }
-    : {
-      altitude: latestAltitude,
-      timestamp: new Date().toISOString(),
-    };
-
-  broadcast(payload);
-  //console.log('Sent altitude:', payload);
-}, 1000);
+  if (latestAltitude !== null) {
+    broadcast(latestAltitude.toString());
+  }
+}, 100);
 
 // Start the server
 server.listen(port, hostname, () => {

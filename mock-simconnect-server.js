@@ -53,14 +53,14 @@ class MockHandle extends EventEmitter {
     }
 
     let altitude = 1000;
-    this._interval = setInterval(() => {
-      altitude += 100 + Math.random() * 50;
+    this._interval = setInterval(() => {            
+      altitude = Math.round(altitude + 1);
       const data = new MockRawBuffer(altitude);
       this.emit('simObjectData', {
         requestID: dataRequestId,
         data,
       });
-    }, period === SimConnectPeriod.SECOND ? 10000 : 10000);
+    }, period === SimConnectPeriod.SECOND ? 1000 : 1000);
 
     return Promise.resolve();
   }
