@@ -78,14 +78,14 @@ open('SimConnect Altitude Bridge', Protocol.FSX_SP2)
       ALTITUDE_REQUEST_ID,
       ALTITUDE_DEFINITION_ID,
       SimConnectConstants.OBJECT_ID_USER,
-      SimConnectPeriod.SECOND
+      SimConnectPeriod.SIM_FRAME
     );
   })
   .catch((error) => {
     console.error('Failed to connect to SimConnect:', error);
   });
 
-// Send altitude every second to all connected clients
+// Send altitude every 100 ms to all connected clients
 setInterval(() => {
   if (latestAltitude !== null) {
     broadcast(latestAltitude.toString());
